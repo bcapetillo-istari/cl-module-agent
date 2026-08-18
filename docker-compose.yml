@@ -1,0 +1,19 @@
+services:
+  cl-agent:
+    build:
+      context: ..
+      dockerfile: containerized_cl_module/Dockerfile
+    image: istari-cl-agent:24.04
+    platform: linux/amd64
+    container_name: istari-cl-agent
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./cl_modules:/opt/local/istari_agent/istari_modules
+      - istari-agent-config:/root/.config/istari_digital
+      - istari-agent-data:/root/.local/share/istari_agent
+
+volumes:
+  istari-agent-config:
+  istari-agent-data:
