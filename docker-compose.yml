@@ -2,7 +2,7 @@ services:
   cl-agent:
     build:
       context: ..
-      dockerfile: containerized_cl_module/Dockerfile
+      dockerfile: cl_module_agent/Dockerfile
     image: istari-cl-agent:24.04
     platform: linux/amd64
     container_name: istari-cl-agent

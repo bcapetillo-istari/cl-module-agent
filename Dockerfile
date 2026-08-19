@@ -23,7 +23,7 @@ RUN mkdir -p /opt/stari-cli \
     && ln -s /opt/stari-cli/stari_ubuntu_24_04-amd64/stari_ubuntu_24_04-amd64 /usr/local/bin/stari \
     && rm /tmp/stari-cli.tar.gz
 
-COPY containerized_cl_module/entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY cl_module_agent/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
 WORKDIR /workspace
