@@ -98,3 +98,6 @@ but never a rebuild or re-registration.
 
 ## Future Work
   Will need a way to auto-register new functions with the Registry Service. The Agent currently works only with pre-registered modules that the Registry Service has already associated with this agent
+
+## Future Vision
+  Exploring way to quickly scale up identical agents on a single node to increase parallelization in Job execution. While developing a custom app making repeated module calls, it appears that module wait time could be dramatically reduced by horizontally scaling Agents able to execute the Job. Jobs are only processed by compatible Agents, meaning Agents that have OS, installed modules, and versions compatible with the Job. For Jobs not requiring external licenses, multiple Agents could theoretically be spun up to process a backlog of Jobs in parallel. 
