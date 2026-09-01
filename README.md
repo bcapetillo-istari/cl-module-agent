@@ -26,6 +26,9 @@ creates a "new" agent on the platform.
   without touching agent install/registration each time.
 - Reproducing a module bug in an isolated, disposable environment instead of
   a shared/production agent.
+- Burning down a backlog of queued jobs faster by running many disposable
+  agents against the same module in parallel (see "Scaling to multiple
+  agents" below).
 
 ## How it works
 
@@ -96,8 +99,50 @@ but never a rebuild or re-registration.
    module available — no rebuild needed unless you changed the Dockerfile
    itself (e.g. bumping `AGENT_VERSION`).
 
+## Scaling to multiple agents
+
+A single agent processes jobs strictly sequentially — claim, validate,
+execute, upload, poll again — and most of that per-job time is orchestration
+overhead, not actual module work. If you have a backlog of many jobs for the
+same module, running several agents against that queue lets them work it in
+parallel instead of one at a time.
+
+`docker-compose.yml` has a second service for this, `cl-agent-replica`,
+alongside the persistent `cl-agent` described above. Replicas are
+deliberately ephemeral and disposable rather than long-lived:
+
+- No fixed container name and no persistent identity volumes — each replica
+  registers as a brand-new agent every time it starts. That's what makes it
+  safe to run any number of them with Docker Compose's `--scale`; sharing a
+  persistent identity volume across replicas would corrupt it.
+- Same `.env` and `cl_modules/` as `cl-agent` — one token can bootstrap any
+  number of independent agent registrations (verified empirically), and
+  every replica sees the same module code with nothing copied per replica.
+- Only safe for modules that don't depend on a per-machine/licensed tool,
+  since replicas share the same host's resources and any local licenses.
+
+Usage:
+
+```
+./scale-up.sh 10       # bring up 10 replica agents
+                        # (or set REPLICA_COUNT in .env and run with no argument)
+./scale-down.sh        # stop and remove all replica agents
+```
+
+Scaling replicas up or down never touches the persistent `cl-agent` service.
+
+**Note:** replicas that crash or get torn down are not deregistered from the
+platform — they remain as idle agent records. See Future Work.
+
 ## Future Work
   Will need a way to auto-register new functions with the Registry Service. The Agent currently works only with pre-registered modules that the Registry Service has already associated with this agent
 
 ## Future Vision
-  Exploring way to quickly scale up identical agents on a single node to increase parallelization in Job execution. While developing a custom app making repeated module calls, it appears that module wait time could be dramatically reduced by horizontally scaling Agents able to execute the Job. Jobs are only processed by compatible Agents, meaning Agents that have OS, installed modules, and versions compatible with the Job. For Jobs not requiring external licenses, multiple Agents could theoretically be spun up to process a backlog of Jobs in parallel. 
+  Exploring way to quickly scale up identical agents on a single node to increase parallelization in Job execution. While developing a custom app making repeated module calls, it appears that module wait time could be dramatically reduced by horizontally scaling Agents able to execute the Job. Jobs are only processed by compatible Agents, meaning Agents that have OS, installed modules, and versions compatible with the Job. For Jobs not requiring external licenses, multiple Agents could theoretically be spun up to process a backlog of Jobs in parallel.
+
+  **Update:** implemented — see "Scaling to multiple agents" above
+  (`cl-agent-replica`, `scale-up.sh`/`scale-down.sh`). Two things remain
+  open: confirming with Istari whether reusing one PAT across many
+  concurrently-running agents is officially supported at scale (only
+  verified against the demo tenant so far), and whether replica agent
+  records should be archived on teardown instead of left idle.
