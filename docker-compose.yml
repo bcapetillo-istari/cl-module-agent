@@ -14,6 +14,18 @@ services:
       - istari-agent-config:/root/.config/istari_digital
       - istari-agent-data:/root/.local/share/istari_agent
 
+  cl-agent-replica:
+    build:
+      context: ..
+      dockerfile: cl_module_agent/Dockerfile
+    image: istari-cl-agent:24.04
+    platform: linux/amd64
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./cl_modules:/opt/local/istari_agent/istari_modules
+
 volumes:
   istari-agent-config:
   istari-agent-data:
