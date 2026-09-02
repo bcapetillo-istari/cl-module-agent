@@ -25,6 +25,7 @@ services:
       - .env
     volumes:
       - ./cl_modules:/opt/local/istari_agent/istari_modules
+    extra_hosts: ["host.docker.internal:host-gateway"]
 
 volumes:
   istari-agent-config:
